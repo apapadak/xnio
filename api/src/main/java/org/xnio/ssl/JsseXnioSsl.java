@@ -32,7 +32,6 @@ import java.security.NoSuchProviderException;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
-
 import javax.net.ssl.SSLEngine;
 import org.xnio.BufferAllocator;
 import org.xnio.ByteBufferSlicePool;
@@ -148,7 +147,17 @@ public final class JsseXnioSsl extends XnioSsl {
         final FutureResult<SslConnection> futureResult = new FutureResult<SslConnection>(worker);
         final IoFuture<StreamConnection> connection = worker.openStreamConnection(bindAddress, destination, new ChannelListener<StreamConnection>() {
             public void handleEvent(final StreamConnection connection) {
-                final SslConnection wrappedConnection = new JsseSslStreamConnection(connection, JsseSslUtils.createSSLEngine(sslContext, optionMap, destination), bufferPool, bufferPool, optionMap.get(Options.SSL_STARTTLS, false));
+                final SSLEngine sslEngine = JsseSslUtils.createSSLEngine(sslContext, optionMap, destination);
+                final SslConnection wrappedConnection = new JsseSslConnection(connection, sslEngine, bufferPool, bufferPool);
+                if (! optionMap.get(Options.SSL_STARTTLS, false)) {
+                    try {
+                        wrappedConnection.startHandshake();
+                    } catch (IOException e) {
+                        if (futureResult.setException(e)) {
+                            IoUtils.safeClose(connection);
+                        }
+                    }
+                }
                 if (! futureResult.setResult(wrappedConnection)) {
                     IoUtils.safeClose(connection);
                 } else {

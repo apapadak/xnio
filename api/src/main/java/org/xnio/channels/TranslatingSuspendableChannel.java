@@ -30,7 +30,6 @@ import static org.xnio.Bits.intBitMask;
 import static org.xnio._private.Messages.msg;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.nio.channels.Channel;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
@@ -51,7 +50,11 @@ import org.xnio.XnioWorker;
  * @param <W> the channel type being wrapped by this class
  *
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
+ *
+ * @deprecated New translating channels should use the conduit infrastructure instead.
  */
+@Deprecated
+@SuppressWarnings("deprecation")
 public abstract class TranslatingSuspendableChannel<C extends SuspendableChannel, W extends SuspendableChannel> implements SuspendableChannel, WrappedChannel<W>, ReadListenerSettable<C>, WriteListenerSettable<C>, CloseListenerSettable<C> {
 
     /**
